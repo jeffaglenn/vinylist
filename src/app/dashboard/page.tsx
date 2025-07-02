@@ -102,6 +102,6 @@ export default async function DashboardPage() {
 
 // Add metadata
 export const metadata = {
-  title: 'Dashboard | Vinyl Tracker',
+  title: 'Dashboard | Vinylist',
   description: 'Manage your vinyl collection dashboard',
 } 

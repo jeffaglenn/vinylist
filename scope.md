@@ -1,4 +1,4 @@
-# Vinyl Collection Tracker - Project Scope & Plan (Multi-User)
+# Vinylist - Project Scope & Plan (Multi-User)
 
 ## **🎯 Current Status**
 **Phase 1 Complete**: ✅ Full authentication system with user registration, login, logout, password reset, protected routes, and multi-user data isolation.

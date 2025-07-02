@@ -70,7 +70,7 @@ export default function SignUpForm() {
             Account Created!
           </h2>
           <p className="text-gray-600 mb-4">
-            Welcome to your vinyl collection tracker. You can now start adding albums to your personal collection.
+            Welcome to Vinylist! You can now start adding albums to your personal collection.
           </p>
           <p className="text-sm text-gray-500">
             Redirecting to your dashboard...

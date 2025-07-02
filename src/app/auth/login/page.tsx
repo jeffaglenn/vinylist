@@ -5,7 +5,7 @@ export default function LoginPage() {
     <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <h1 className="text-center text-3xl font-extrabold text-gray-900 mb-2">
-          🎵 Vinyl Tracker
+          🎵 Vinylist
         </h1>
         <p className="text-center text-sm text-gray-600 mb-8">
           Track your vinyl collection with ease
@@ -21,6 +21,6 @@ export default function LoginPage() {
 
 // Optional: Add metadata for better SEO
 export const metadata = {
-  title: 'Sign In | Vinyl Tracker',
-  description: 'Sign in to your vinyl collection tracker account',
+  title: 'Sign In | Vinylist',
+  description: 'Sign in to your Vinylist account',
 } 
