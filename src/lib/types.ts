@@ -45,6 +45,7 @@ export interface Album {
   updated_at: string
 }
 
+// Updated to match database CHECK constraint values
 export type AlbumCondition = 'Mint' | 'Near Mint' | 'Very Good' | 'Good' | 'Fair' | 'Poor'
 
 // API Response Types

@@ -1,6 +1,7 @@
 import { getUser } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import LogoutButton from '@/components/auth/LogoutButton'
+import AlbumStats from '@/components/dashboard/AlbumStats'
 
 export default async function DashboardPage() {
   // Check if user is authenticated (server-side)
@@ -49,11 +50,14 @@ export default async function DashboardPage() {
                 <div className="bg-blue-50 p-4 rounded-lg">
                   <h3 className="font-medium text-blue-900 mb-2">Add New Album</h3>
                   <p className="text-blue-700 text-sm mb-3">
-                    Search for albums and add them to your collection
+                    Manually add albums to your collection with photo upload
                   </p>
-                  <button className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors">
+                  <a 
+                    href="/dashboard/add-album"
+                    className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors inline-block"
+                  >
                     Add Album
-                  </button>
+                  </a>
                 </div>
                 
                 <div className="bg-green-50 p-4 rounded-lg">
@@ -61,9 +65,12 @@ export default async function DashboardPage() {
                   <p className="text-green-700 text-sm mb-3">
                     Browse and manage your existing vinyl records
                   </p>
-                  <button className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors">
+                  <a 
+                    href="/dashboard/collection"
+                    className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors inline-block"
+                  >
                     View Collection
-                  </button>
+                  </a>
                 </div>
               </div>
             </div>
@@ -75,20 +82,7 @@ export default async function DashboardPage() {
               <h3 className="text-lg font-medium text-gray-900 mb-4">
                 Collection Stats
               </h3>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-blue-600">0</div>
-                  <div className="text-sm text-gray-500">Total Albums</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-green-600">0</div>
-                  <div className="text-sm text-gray-500">This Month</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-purple-600">$0</div>
-                  <div className="text-sm text-gray-500">Est. Value</div>
-                </div>
-              </div>
+              <AlbumStats />
               <p className="text-center text-gray-500 text-sm mt-4">
                 Start adding albums to see your collection grow!
               </p>
