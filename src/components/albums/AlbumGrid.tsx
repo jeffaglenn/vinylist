@@ -3,11 +3,23 @@
 import { useState, useEffect } from 'react'
 import Image from 'next/image'
 import { Album } from '@/lib/types'
+import ConfirmationDialog from '@/components/ui/ConfirmationDialog'
 
 export default function AlbumGrid() {
   const [albums, setAlbums] = useState<Album[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [deleteConfirm, setDeleteConfirm] = useState<{
+    isOpen: boolean
+    albumId: string | null
+    albumTitle: string
+    artist: string
+  }>({
+    isOpen: false,
+    albumId: null,
+    albumTitle: '',
+    artist: ''
+  })
 
   useEffect(() => {
     fetchAlbums()
@@ -28,6 +40,63 @@ export default function AlbumGrid() {
     } finally {
       setLoading(false)
     }
+  }
+
+  const handleDeleteClick = (album: Album) => {
+    setDeleteConfirm({
+      isOpen: true,
+      albumId: album.id,
+      albumTitle: album.album_title,
+      artist: album.artist
+    })
+  }
+
+  const handleDeleteConfirm = async () => {
+    if (!deleteConfirm.albumId) return
+
+    try {
+      const response = await fetch(`/api/albums/${deleteConfirm.albumId}`, {
+        method: 'DELETE'
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to delete album')
+      }
+
+      // Remove the album from the state
+      setAlbums(prevAlbums => 
+        prevAlbums.filter(album => album.id !== deleteConfirm.albumId)
+      )
+
+      // Close the confirmation dialog
+      setDeleteConfirm({
+        isOpen: false,
+        albumId: null,
+        albumTitle: '',
+        artist: ''
+      })
+
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to delete album')
+      // Close the dialog even on error so user can see the error message
+      setDeleteConfirm({
+        isOpen: false,
+        albumId: null,
+        albumTitle: '',
+        artist: ''
+      })
+    }
+  }
+
+  const handleDeleteCancel = () => {
+    setDeleteConfirm({
+      isOpen: false,
+      albumId: null,
+      albumTitle: '',
+      artist: ''
+    })
   }
 
   if (loading) {
@@ -89,18 +158,50 @@ export default function AlbumGrid() {
 
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
         {albums.map((album) => (
-          <AlbumCard key={album.id} album={album} />
+          <AlbumCard 
+            key={album.id} 
+            album={album} 
+            onDelete={handleDeleteClick}
+          />
         ))}
       </div>
+
+      {/* Confirmation Dialog */}
+      <ConfirmationDialog
+        isOpen={deleteConfirm.isOpen}
+        title="Delete Album"
+        message={`Are you sure you want to delete "${deleteConfirm.albumTitle}" by ${deleteConfirm.artist}? This action cannot be undone.`}
+        confirmText="Delete"
+        cancelText="Cancel"
+        onConfirm={handleDeleteConfirm}
+        onCancel={handleDeleteCancel}
+        isDestructive={true}
+      />
     </div>
   )
 }
 
-function AlbumCard({ album }: { album: Album }) {
+function AlbumCard({ album, onDelete }: { album: Album; onDelete: (album: Album) => void }) {
   const [imageError, setImageError] = useState(false)
+  const [isHovered, setIsHovered] = useState(false)
 
   return (
-    <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
+    <div 
+      className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow relative group"
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
+      {/* Delete Button */}
+      {isHovered && (
+        <button
+          onClick={() => onDelete(album)}
+          className="absolute top-2 right-2 z-10 w-8 h-8 bg-red-600 hover:bg-red-700 text-white rounded-full flex items-center justify-center transition-colors shadow-lg"
+          title="Delete album"
+        >
+          ×
+        </button>
+      )}
+
       {/* Album Cover */}
       <div className="aspect-square relative bg-gray-100">
         {album.cover_art_url && !imageError ? (

@@ -35,43 +35,27 @@ export default async function DashboardPage() {
       <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
         <div className="px-4 py-6 sm:px-0">
           {/* Welcome Section */}
-          <div className="bg-white overflow-hidden shadow rounded-lg">
+          <div className="bg-white overflow-hidden shadow rounded-lg mb-6">
             <div className="px-4 py-5 sm:p-6">
-              <h2 className="text-lg font-medium text-gray-900 mb-4">
-                Welcome to Your Collection Dashboard
+              <h2 className="text-lg font-medium text-gray-900 mb-2">
+                Welcome to Your Vinyl Collection
               </h2>
-              <p className="text-gray-600 mb-6">
-                This is where you'll manage your vinyl collection. You can add new albums, 
-                view your existing collection, and track the condition of your records.
+              <p className="text-gray-600 mb-4">
+                Start organizing and tracking your vinyl record collection.
               </p>
-              
-              {/* Quick Actions */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="bg-blue-50 p-4 rounded-lg">
-                  <h3 className="font-medium text-blue-900 mb-2">Add New Album</h3>
-                  <p className="text-blue-700 text-sm mb-3">
-                    Manually add albums to your collection with photo upload
-                  </p>
-                  <a 
-                    href="/dashboard/add-album"
-                    className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors inline-block"
-                  >
-                    Add Album
-                  </a>
-                </div>
-                
-                <div className="bg-green-50 p-4 rounded-lg">
-                  <h3 className="font-medium text-green-900 mb-2">View Collection</h3>
-                  <p className="text-green-700 text-sm mb-3">
-                    Browse and manage your existing vinyl records
-                  </p>
-                  <a 
-                    href="/dashboard/collection"
-                    className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors inline-block"
-                  >
-                    View Collection
-                  </a>
-                </div>
+              <div className="flex flex-col sm:flex-row gap-3">
+                <a
+                  href="/dashboard/add-album"
+                  className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors text-center"
+                >
+                  Add New Album
+                </a>
+                <a
+                  href="/dashboard/collection"
+                  className="bg-gray-100 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-200 transition-colors text-center"
+                >
+                  View Collection
+                </a>
               </div>
             </div>
           </div>
