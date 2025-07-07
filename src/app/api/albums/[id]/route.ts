@@ -133,91 +133,37 @@ export async function DELETE(
     // If album has cover art, delete it from storage first
     if (album.cover_art_url) {
       try {
-        // Extract file path from URL
-        let filePath: string
+        // Extract file path from URL using the same logic as the edit functionality
+        const url = new URL(album.cover_art_url)
+        const pathParts = url.pathname.split('/')
+        const bucketIndex = pathParts.findIndex(part => part === 'album-art')
         
-        console.log('Original cover_art_url:', album.cover_art_url)
-        
-        if (album.cover_art_url.startsWith('http')) {
-          // Full URL - extract the path after '/public/album-art/'
-          const url = new URL(album.cover_art_url)
-          console.log('URL pathname:', url.pathname)
+        if (bucketIndex !== -1 && bucketIndex < pathParts.length - 1) {
+          const filePath = pathParts.slice(bucketIndex + 1).join('/')
           
-          // Supabase storage URLs look like: /storage/v1/object/public/bucket-name/path
-          const pathParts = url.pathname.split('/')
-          console.log('Path parts:', pathParts)
-          
-          // Find 'album-art' and get everything after it
-          const bucketIndex = pathParts.findIndex(part => part === 'album-art')
-          
-          if (bucketIndex !== -1 && bucketIndex < pathParts.length - 1) {
-            // Get everything after the bucket name
-            filePath = pathParts.slice(bucketIndex + 1).join('/')
-          } else {
-            // Fallback: try to match pattern and extract user_id/filename.ext
-            const pathMatch = url.pathname.match(/\/album-art\/(.+)$/)
-            if (pathMatch) {
-              filePath = pathMatch[1]
-            } else {
-              throw new Error('Could not extract file path from URL')
+          console.log('Attempting to delete cover art file:', filePath)
+
+          // Create service role client for deletion (same as edit functionality)
+          const serviceSupabase = createServerClient(
+            process.env.NEXT_PUBLIC_SUPABASE_URL!,
+            process.env.SUPABASE_SERVICE_ROLE_KEY!,
+            {
+              cookies: {
+                getAll() { return [] },
+                setAll() {},
+              },
             }
+          )
+
+          const { error: storageDeleteError } = await serviceSupabase.storage
+            .from('album-art')
+            .remove([filePath])
+
+          if (storageDeleteError) {
+            console.error('Storage deletion error:', storageDeleteError)
+          } else {
+            console.log('Cover art deleted successfully from storage')
           }
-        } else {
-          // Already a relative path
-          filePath = album.cover_art_url
-        }
-
-        console.log('Extracted file path for deletion:', filePath)
-
-        // Create a service role client for storage operations
-        const serviceSupabase = createServerClient(
-          process.env.NEXT_PUBLIC_SUPABASE_URL!,
-          process.env.SUPABASE_SERVICE_ROLE_KEY!, // Use service role key
-          {
-            cookies: {
-              getAll() {
-                return request.cookies.getAll()
-              },
-              setAll(cookiesToSet) {
-                cookiesToSet.forEach(({ name, value, options }) => {
-                  supabaseResponse.cookies.set(name, value, options)
-                })
-              },
-            },
-          }
-        )
-
-        // Verify service role key is available
-        if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
-          console.error('SUPABASE_SERVICE_ROLE_KEY is not set!')
-          throw new Error('Storage service key not configured')
-        }
-
-        console.log('Service role key is available')
-
-        // Delete the file from storage using the service role client
-        console.log('Attempting to delete file from storage:', filePath)
-        const { data: removeData, error: removeError } = await serviceSupabase.storage
-          .from('album-art')
-          .remove([filePath])
-
-        if (removeError) {
-          console.error('Storage deletion error:', removeError)
-          // Don't fail the entire deletion if storage deletion fails
-          console.log('Storage deletion failed but continuing with database deletion')
-        } else {
-          console.log('Storage deletion successful:', removeData)
-        }
-
-        // Verify deletion worked by trying to access the file
-        const { data: testData, error: testError } = await serviceSupabase.storage
-          .from('album-art')
-          .download(filePath)
-
-        if (testError) {
-          console.log('File successfully deleted - no longer accessible:', testError.message)
-        } else {
-          console.log('Warning: File may still be accessible after deletion')
         }
 
       } catch (storageError) {

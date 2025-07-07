@@ -1,24 +1,17 @@
 # Vinyl Collection App - TODO
 
-## 🔴 High Priority Issues
+## 🟥 High Priority Issues
 
 ### Album Art Storage Cleanup
-**Status**: Not working  
-**Description**: When albums are deleted, the cover art images remain in the Supabase `album-art` storage bucket  
-**Impact**: Storage costs will accumulate over time with orphaned files  
-**Current State**: 
+**Status**: ✅ Completed
+**Description**: When albums are deleted, the cover art images remain in the Supabase `album-art` storage bucket
+**Impact**: Storage costs will accumulate over time with orphaned files
+**Resolution**: Storage deletion now works for both album edit (removal/replacement) and album deletion. Orphaned files are properly cleaned up.
+**Current State**:
 - Database deletion works properly
 - UI updates correctly
-- Storage API `.remove()` calls appear to succeed but files remain accessible
+- Storage API `.remove()` calls now succeed and files are deleted as expected
 - Service role key is configured correctly
-
-**Potential Solutions to Investigate**:
-- [ ] Check Supabase RLS policies for storage bucket operations
-- [ ] Verify service role permissions in Supabase dashboard
-- [ ] Test with different file path formats
-- [ ] Consider using database triggers or webhooks for cleanup
-- [ ] Investigate Supabase Storage API timing/caching issues
-- [ ] Create manual cleanup utility for existing orphaned files
 
 ---
 
@@ -122,4 +115,4 @@
 
 ---
 
-*Last updated: $(date)* 
+*Last updated: $(date)*
