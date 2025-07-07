@@ -185,21 +185,34 @@ function AlbumCard({ album, onDelete }: { album: Album; onDelete: (album: Album)
   const [imageError, setImageError] = useState(false)
   const [isHovered, setIsHovered] = useState(false)
 
+  const handleEditClick = () => {
+    window.location.href = `/dashboard/edit-album/${album.id}`
+  }
+
   return (
     <div 
       className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow relative group"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      {/* Delete Button */}
+      {/* Edit and Delete Buttons */}
       {isHovered && (
-        <button
-          onClick={() => onDelete(album)}
-          className="absolute top-2 right-2 z-10 w-8 h-8 bg-red-600 hover:bg-red-700 text-white rounded-full flex items-center justify-center transition-colors shadow-lg"
-          title="Delete album"
-        >
-          ×
-        </button>
+        <div className="absolute top-2 right-2 z-10 flex space-x-2">
+          <button
+            onClick={handleEditClick}
+            className="w-8 h-8 bg-blue-600 hover:bg-blue-700 text-white rounded-full flex items-center justify-center transition-colors shadow-lg"
+            title="Edit album"
+          >
+            ✏️
+          </button>
+          <button
+            onClick={() => onDelete(album)}
+            className="w-8 h-8 bg-red-600 hover:bg-red-700 text-white rounded-full flex items-center justify-center transition-colors shadow-lg"
+            title="Delete album"
+          >
+            ×
+          </button>
+        </div>
       )}
 
       {/* Album Cover */}
