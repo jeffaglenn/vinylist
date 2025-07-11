@@ -1,5 +1,6 @@
 import { getUser } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
+import Link from 'next/link'
 import LogoutButton from '@/components/auth/LogoutButton'
 import AlbumStats from '@/components/dashboard/AlbumStats'
 
@@ -44,18 +45,18 @@ export default async function DashboardPage() {
                 Start organizing and tracking your vinyl record collection.
               </p>
               <div className="flex flex-col sm:flex-row gap-3">
-                <a
+                <Link
                   href="/dashboard/add-album"
                   className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors text-center"
                 >
                   Add New Album
-                </a>
-                <a
+                </Link>
+                <Link
                   href="/dashboard/collection"
                   className="bg-gray-100 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-200 transition-colors text-center"
                 >
                   View Collection
-                </a>
+                </Link>
               </div>
             </div>
           </div>
