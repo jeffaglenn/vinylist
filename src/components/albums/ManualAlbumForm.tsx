@@ -175,6 +175,7 @@ export default function ManualAlbumForm() {
     }
   }
 
+
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (file) {
@@ -312,20 +313,24 @@ export default function ManualAlbumForm() {
             Search MusicBrainz database to automatically fill album details
           </p>
           
-          <div className="relative">
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={handleSearchInputChange}
-              placeholder="Search for artist, album, or both (e.g., 'Beatles Abbey Road')"
-              className="w-full px-3 py-2 border border-blue-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
-            
-            {searchLoading && (
-              <div className="absolute right-3 top-2">
-                <div className="animate-spin h-5 w-5 border-2 border-blue-500 border-t-transparent rounded-full"></div>
-              </div>
-            )}
+          <div className="space-y-3">
+            {/* Text Search */}
+            <div className="relative">
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={handleSearchInputChange}
+                placeholder="Search for artist, album, or both (e.g., 'Beatles Abbey Road')"
+                className="w-full px-3 py-2 border border-blue-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+              
+              {searchLoading && (
+                <div className="absolute right-3 top-2">
+                  <div className="animate-spin h-5 w-5 border-2 border-blue-500 border-t-transparent rounded-full"></div>
+                </div>
+              )}
+            </div>
+
           </div>
 
           {/* Search Results */}
