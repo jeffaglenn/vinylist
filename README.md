@@ -33,8 +33,8 @@ A modern web application for tracking and managing your vinyl record collection.
    ```
 
 3. **Run the development server**
-   ```bash
-   npm run dev
+```bash
+npm run dev
    ```
 
 4. **Open the application**
