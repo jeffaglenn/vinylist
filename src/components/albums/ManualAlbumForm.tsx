@@ -21,9 +21,15 @@ export default function ManualAlbumForm() {
   const [existingArtists, setExistingArtists] = useState<string[]>([])
   const [showArtistSuggestions, setShowArtistSuggestions] = useState(false)
   const [filteredArtists, setFilteredArtists] = useState<string[]>([])
+  const [searchQuery, setSearchQuery] = useState('')
+  const [searchResults, setSearchResults] = useState<any[]>([])
+  const [showSearchResults, setShowSearchResults] = useState(false)
+  const [searchLoading, setSearchLoading] = useState(false)
+  const [coverArtLoading, setCoverArtLoading] = useState(false)
   
   const fileInputRef = useRef<HTMLInputElement>(null)
   const cameraInputRef = useRef<HTMLInputElement>(null)
+  const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const router = useRouter()
 
   const conditions: AlbumCondition[] = ['Mint', 'Near Mint', 'Very Good', 'Good', 'Fair', 'Poor']
@@ -74,6 +80,99 @@ export default function ManualAlbumForm() {
     }))
     setShowArtistSuggestions(false)
     setFilteredArtists([])
+  }
+
+  const handleSearch = async (query: string) => {
+    if (query.trim().length < 2) {
+      setSearchResults([])
+      setShowSearchResults(false)
+      return
+    }
+
+    setSearchLoading(true)
+    try {
+      const response = await fetch(`/api/search-albums?q=${encodeURIComponent(query)}`)
+      if (response.ok) {
+        const data = await response.json()
+        setSearchResults(data.results || [])
+        setShowSearchResults(true)
+      } else {
+        console.error('Search failed:', response.statusText)
+        setSearchResults([])
+        setShowSearchResults(false)
+      }
+    } catch (error) {
+      console.error('Search error:', error)
+      setSearchResults([])
+      setShowSearchResults(false)
+    } finally {
+      setSearchLoading(false)
+    }
+  }
+
+  const handleSearchInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const query = e.target.value
+    setSearchQuery(query)
+    
+    // Debounce search
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current)
+    }
+    searchTimeoutRef.current = setTimeout(() => {
+      handleSearch(query)
+    }, 500)
+  }
+
+  const handleAlbumSelect = async (album: any) => {
+    // Update form data
+    setFormData(prev => ({
+      ...prev,
+      artist: album.artist,
+      album_title: album.title,
+      release_year: album.year || ''
+    }))
+    
+    // Clear search
+    setSearchQuery('')
+    setShowSearchResults(false)
+    setSearchResults([])
+    
+    // Try to fetch cover art
+    if (album.id) {
+      await fetchCoverArt(album.id)
+    }
+  }
+
+  const fetchCoverArt = async (mbid: string) => {
+    setCoverArtLoading(true)
+    try {
+      const response = await fetch(`/api/cover-art?mbid=${mbid}`)
+      if (response.ok) {
+        const data = await response.json()
+        if (data.available && data.coverArtUrl) {
+          // Convert the cover art URL to a blob and create a File object
+          const imageResponse = await fetch(data.coverArtUrl)
+          if (imageResponse.ok) {
+            const blob = await imageResponse.blob()
+            
+            // Create a File object from the blob
+            const file = new File([blob], 'cover-art.jpg', { type: blob.type })
+            
+            // Set the cover image and preview
+            setCoverImage(file)
+            setImagePreview(data.coverArtUrl)
+            
+            console.log('Cover art loaded successfully')
+          }
+        } else {
+          console.log('No cover art available for this release')
+        }
+      }
+    } catch (error) {
+      console.error('Failed to fetch cover art:', error)
+    } finally {
+      setCoverArtLoading(false)
+    }
   }
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -193,7 +292,7 @@ export default function ManualAlbumForm() {
   return (
     <div className="bg-white p-8 rounded-lg shadow-md">
       <h2 className="text-2xl font-bold mb-6 text-gray-800">
-        Add Album Manually
+        Add Album
       </h2>
 
       <form onSubmit={handleSubmit} className="space-y-6">
@@ -204,10 +303,69 @@ export default function ManualAlbumForm() {
           </div>
         )}
 
+        {/* Album Search */}
+        <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+          <h3 className="text-lg font-medium text-blue-900 mb-3">
+            🔍 Search for Album
+          </h3>
+          <p className="text-blue-700 text-sm mb-3">
+            Search MusicBrainz database to automatically fill album details
+          </p>
+          
+          <div className="relative">
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={handleSearchInputChange}
+              placeholder="Search for artist, album, or both (e.g., 'Beatles Abbey Road')"
+              className="w-full px-3 py-2 border border-blue-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+            
+            {searchLoading && (
+              <div className="absolute right-3 top-2">
+                <div className="animate-spin h-5 w-5 border-2 border-blue-500 border-t-transparent rounded-full"></div>
+              </div>
+            )}
+          </div>
+
+          {/* Search Results */}
+          {showSearchResults && searchResults.length > 0 && (
+            <div className="mt-3 max-h-64 overflow-y-auto border border-blue-300 rounded-md bg-white">
+              {searchResults.map((album, index) => (
+                <button
+                  key={album.id}
+                  type="button"
+                  onClick={() => handleAlbumSelect(album)}
+                  className="w-full text-left p-3 hover:bg-blue-50 focus:bg-blue-50 focus:outline-none border-b border-blue-100 last:border-b-0"
+                >
+                  <div className="font-medium text-gray-900">{album.title}</div>
+                  <div className="text-sm text-gray-600">
+                    by {album.artist}
+                    {album.year && ` (${album.year})`}
+                    {album.label && ` • ${album.label}`}
+                  </div>
+                  {album.type && (
+                    <div className="text-xs text-blue-600 mt-1">{album.type}</div>
+                  )}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {showSearchResults && searchResults.length === 0 && !searchLoading && searchQuery.length >= 2 && (
+            <div className="mt-3 p-3 text-center text-gray-500 border border-blue-300 rounded-md bg-white">
+              No albums found. You can still add manually below.
+            </div>
+          )}
+        </div>
+
         {/* Album Photo Section */}
         <div className="space-y-4">
           <label className="block text-sm font-medium text-gray-700">
             Album Cover Photo
+            {coverArtLoading && (
+              <span className="ml-2 text-blue-600 text-sm">Loading cover art...</span>
+            )}
           </label>
           
           {imagePreview ? (
@@ -227,6 +385,18 @@ export default function ManualAlbumForm() {
               >
                 ×
               </button>
+              {coverImage?.name === 'cover-art.jpg' && (
+                <p className="text-center text-green-600 text-sm mt-2">
+                  ✓ Cover art automatically fetched from MusicBrainz
+                </p>
+              )}
+            </div>
+          ) : coverArtLoading ? (
+            <div className="border-2 border-dashed border-blue-300 rounded-lg p-6 text-center bg-blue-50">
+              <div className="animate-spin h-8 w-8 border-2 border-blue-500 border-t-transparent rounded-full mx-auto mb-4"></div>
+              <p className="text-blue-600 mb-4">
+                Fetching album cover art...
+              </p>
             </div>
           ) : (
             <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
