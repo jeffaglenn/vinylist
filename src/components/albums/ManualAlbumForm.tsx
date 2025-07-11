@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { AlbumCondition } from '@/lib/types'
@@ -18,6 +18,9 @@ export default function ManualAlbumForm() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
+  const [existingArtists, setExistingArtists] = useState<string[]>([])
+  const [showArtistSuggestions, setShowArtistSuggestions] = useState(false)
+  const [filteredArtists, setFilteredArtists] = useState<string[]>([])
   
   const fileInputRef = useRef<HTMLInputElement>(null)
   const cameraInputRef = useRef<HTMLInputElement>(null)
@@ -25,12 +28,52 @@ export default function ManualAlbumForm() {
 
   const conditions: AlbumCondition[] = ['Mint', 'Near Mint', 'Very Good', 'Good', 'Fair', 'Poor']
 
+  // Fetch existing artists on component mount
+  useEffect(() => {
+    const fetchArtists = async () => {
+      try {
+        const response = await fetch('/api/artists')
+        if (response.ok) {
+          const data = await response.json()
+          setExistingArtists(data.artists || [])
+        }
+      } catch (error) {
+        console.error('Failed to fetch artists:', error)
+      }
+    }
+    
+    fetchArtists()
+  }, [])
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
     setFormData(prev => ({
       ...prev,
       [name]: value
     }))
+
+    // Handle artist field autocomplete
+    if (name === 'artist') {
+      if (value.trim()) {
+        const filtered = existingArtists.filter(artist =>
+          artist.toLowerCase().includes(value.toLowerCase())
+        )
+        setFilteredArtists(filtered)
+        setShowArtistSuggestions(filtered.length > 0)
+      } else {
+        setShowArtistSuggestions(false)
+        setFilteredArtists([])
+      }
+    }
+  }
+
+  const handleArtistSelect = (artist: string) => {
+    setFormData(prev => ({
+      ...prev,
+      artist
+    }))
+    setShowArtistSuggestions(false)
+    setFilteredArtists([])
   }
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -118,7 +161,7 @@ export default function ManualAlbumForm() {
       // Success! Show confirmation and redirect
       setSuccess(true)
       setTimeout(() => {
-        router.push('/dashboard')
+        router.push('/dashboard/collection')
       }, 2000)
 
     } catch (err) {
@@ -140,7 +183,7 @@ export default function ManualAlbumForm() {
             {formData.artist} - {formData.album_title} has been added to your collection.
           </p>
           <p className="text-sm text-gray-500">
-            Redirecting to your dashboard...
+            Redirecting to your collection...
           </p>
         </div>
       </div>
@@ -231,7 +274,7 @@ export default function ManualAlbumForm() {
         </div>
 
         {/* Artist */}
-        <div>
+        <div className="relative">
           <label htmlFor="artist" className="block text-sm font-medium text-gray-700 mb-1">
             Artist *
           </label>
@@ -241,10 +284,43 @@ export default function ManualAlbumForm() {
             name="artist"
             value={formData.artist}
             onChange={handleInputChange}
+            onFocus={() => {
+              if (formData.artist.trim() && filteredArtists.length > 0) {
+                setShowArtistSuggestions(true)
+              }
+            }}
+            onBlur={() => {
+              // Delay hiding suggestions to allow clicking on them
+              setTimeout(() => setShowArtistSuggestions(false), 200)
+            }}
             required
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             placeholder="e.g., The Beatles"
+            autoComplete="off"
           />
+          
+          {/* Artist Suggestions Dropdown */}
+          {showArtistSuggestions && filteredArtists.length > 0 && (
+            <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto">
+              {filteredArtists.map((artist, index) => (
+                <button
+                  key={index}
+                  type="button"
+                  onClick={() => handleArtistSelect(artist)}
+                  className="w-full text-left px-3 py-2 hover:bg-blue-50 focus:bg-blue-50 focus:outline-none first:rounded-t-md last:rounded-b-md"
+                >
+                  {artist}
+                </button>
+              ))}
+            </div>
+          )}
+          
+          {/* Show existing artists count */}
+          {existingArtists.length > 0 && !showArtistSuggestions && (
+            <p className="text-xs text-gray-500 mt-1">
+              Start typing to see suggestions from your {existingArtists.length} existing artist{existingArtists.length !== 1 ? 's' : ''}
+            </p>
+          )}
         </div>
 
         {/* Album Title */}
@@ -323,7 +399,7 @@ export default function ManualAlbumForm() {
         <div className="flex justify-end space-x-4">
           <button
             type="button"
-            onClick={() => router.push('/dashboard')}
+            onClick={() => router.push('/dashboard/collection')}
             className="px-6 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors"
           >
             Cancel
